@@ -19,6 +19,24 @@ class Node:
     def backward(self):
         raise NotImplementedError
 
+#Creating a Linear node
+class Linear(Node):
+    def __init__(self,A,x,b):
+        # Initialize with three inputs A and x and b
+        Node.__init__(self,[A,x,b])
+
+    def forward(self):
+        # Perform element-wise addition and multiplication
+        A,x,b = self.inputs
+        self.value = A.value * x.value + b.value
+
+    def backward(self):
+        # Compute gradients for A,x and b based on the chain rule
+        A, x, b = self.inputs
+        self.gradients[A] = self.outputs[0].gradients[self] * x.value
+        self.gradients[x] = self.outputs[0].gradients[self] * A.value
+        self.gradients[b] = self.outputs[0].gradients[self]
+
 
 # Input Node
 class Input(Node):
