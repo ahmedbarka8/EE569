@@ -64,15 +64,17 @@ w2_node = Parameter(W2)
 #b1_node = Parameter(b1)
 
 # Build computation graph
-u1_node = Multiply(x1_node,w1_node)
-u2_node = Multiply(x2_node,w2_node)
-u12_node = Addition(u1_node,u2_node)
-u_node = Addition(u12_node, w0_node)
+b_node = Linear(w1_node,x1_node,w0_node)
+u_node = Linear(w2_node,x2_node,b_node)
+# u2_node = Multiply(x2_node,w2_node)
+# u12_node = Addition(u1_node,u2_node)
+# u_node = Addition(u12_node, w0_node)
 sigmoid = Sigmoid(u_node)
 loss = BCE(y_node, sigmoid)
 
+
 # Create graph outside the training loop
-graph = [x1_node,x2_node,w0_node,w1_node,w2_node,u1_node,u2_node,u12_node,u_node,sigmoid,loss]
+graph = [x1_node,x2_node,w0_node,w1_node,w2_node,b_node,u_node,sigmoid,loss]
 trainable = [w0_node,w1_node,w2_node]
 
 # Training loop
