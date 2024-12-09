@@ -116,7 +116,8 @@ for i in range(X_test.shape[0]):
     x2_node.value = X_test[i][1].reshape(1, -1)
     forward_pass(graph)
 
-    if np.argmax(sigmoid.value) == y_test[i]:
+    pre = 1 if sigmoid.value[0][0] >= 0.5 else 0
+    if pre == y_test[i]:
         correct_predictions += 1
 
 accuracy = correct_predictions / X_test.shape[0]
