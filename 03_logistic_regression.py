@@ -49,9 +49,9 @@ n_features = X_train.shape[1]
 n_output = 1
 
 # Initialize weights and biases
-W0 = np.zeros(1)
-W1 = np.random.randn(1) * 0.1
-W2 = np.random.randn(1) * 0.1
+W0 = np.array(np.zeros(1))
+W1 = np.array([np.random.randn(1) * 0.1 , np.random.randn(1) * 0.1]).reshape(-1,2)
+
 
 # Create nodes
 x1_node = Input()
@@ -60,22 +60,18 @@ y_node = Input()
 
 w0_node = Parameter(W0)
 w1_node = Parameter(W1)
-w2_node = Parameter(W2)
+# w2_node = Parameter(W2)
 #b1_node = Parameter(b1)
 
 # Build computation graph
 b_node = Linear(w1_node,x1_node,w0_node)
-u_node = Linear(w2_node,x2_node,b_node)
-# u2_node = Multiply(x2_node,w2_node)
-# u12_node = Addition(u1_node,u2_node)
-# u_node = Addition(u12_node, w0_node)
-sigmoid = Sigmoid(u_node)
+sigmoid = Sigmoid(b_node)
 loss = BCE(y_node, sigmoid)
 
 
 # Create graph outside the training loop
-graph = [x1_node,x2_node,w0_node,w1_node,w2_node,b_node,u_node,sigmoid,loss]
-trainable = [w0_node,w1_node,w2_node]
+graph = [x1_node,w0_node,w1_node,b_node,sigmoid,loss]
+trainable = [w0_node,w1_node]
 
 # Training loop
 epochs = 100
@@ -93,14 +89,13 @@ def backward_pass(graph):
 # SGD Update
 def sgd_update(trainables, learning_rate=1e-2):
     for t in trainables:
-        t.value -= learning_rate * t.gradients[t][0]
+        t.value -= np.dot(learning_rate ,t.gradients[t].reshape(1,-1))[0]
 
 
 for epoch in range(epochs):
     loss_value = 0
     for i in range(X_train.shape[0]):
-        x1_node.value = X_train[i][0].reshape(1, -1)
-        x2_node.value = X_train[i][1].reshape(1, -1)
+        x1_node.value = X_train[i].reshape(2, -1)
         y_node.value = y_train[i].reshape(1, -1)
 
         forward_pass(graph)
@@ -114,8 +109,7 @@ for epoch in range(epochs):
 # Evaluate the model
 correct_predictions = 0
 for i in range(X_test.shape[0]):
-    x1_node.value = X_test[i][0].reshape(1, -1)
-    x2_node.value = X_test[i][1].reshape(1, -1)
+    x1_node.value = X_test[i].reshape(2, -1)
     forward_pass(graph)
 
     pre = 1 if sigmoid.value[0][0] >= 0.5 else 0
@@ -130,8 +124,7 @@ y_min, y_max = X[:, 1].min(), X[:, 1].max()
 xx, yy = np.meshgrid(np.linspace(x_min, x_max), np.linspace(y_min, y_max))
 Z = []
 for i,j in zip(xx.ravel(),yy.ravel()):
-    x1_node.value = np.array([i]).reshape(1, -1)
-    x2_node.value = np.array([j]).reshape(1, -1)
+    x1_node.value = np.array([i,j]).reshape(2, -1)
     forward_pass(graph)
     Z.append(sigmoid.value)
 Z = np.array(Z).reshape(xx.shape)
