@@ -28,13 +28,13 @@ class Linear(Node):
     def forward(self):
         # Perform element-wise addition and multiplication
         A,x,b = self.inputs
-        self.value = A.value * x.value + b.value
+        self.value = np.dot(A.value , x.value) + b.value
 
     def backward(self):
         # Compute gradients for A,x and b based on the chain rule
         A, x, b = self.inputs
-        self.gradients[A] = self.outputs[0].gradients[self] * x.value
-        self.gradients[x] = self.outputs[0].gradients[self] * A.value
+        self.gradients[x] = np.dot(self.outputs[0].gradients[self],A.value)
+        self.gradients[A] = np.dot(x.value,self.outputs[0].gradients[self])
         self.gradients[b] = self.outputs[0].gradients[self]
 
 
