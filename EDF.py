@@ -28,14 +28,14 @@ class Linear(Node):
     def forward(self):
         # Perform element-wise addition and multiplication
         A,x,b = self.inputs
-        self.value = np.dot(A.value , x.value) + b.value
+        self.value = np.matmul(A.value , x.value) + b.value.reshape(-1,1)
 
     def backward(self):
         # Compute gradients for A,x and b based on the chain rule
         A, x, b = self.inputs
-        self.gradients[x] = np.dot(self.outputs[0].gradients[self],A.value)
-        self.gradients[A] = np.dot(x.value,self.outputs[0].gradients[self])
-        self.gradients[b] = self.outputs[0].gradients[self]
+        self.gradients[x] = np.matmul(A.value.T,self.outputs[0].gradients[self])
+        self.gradients[A] = np.matmul(self.outputs[0].gradients[self],x.value.T)
+        self.gradients[b] = np.sum(self.outputs[0].gradients[self], axis=1)
 
 
 # Input Node
@@ -106,7 +106,7 @@ class Sigmoid(Node):
         Node.__init__(self, [node])
 
     def _sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
+        return 1 / (1 + np.exp(-np.clip(x,-500,500)))
 
     def forward(self):
         input_value = self.inputs[0].value
@@ -122,9 +122,10 @@ class BCE(Node):
 
     def forward(self):
         y_true, y_pred = self.inputs
-        self.value = np.sum(-y_true.value*np.log(y_pred.value)-(1-y_true.value)*np.log(1-y_pred.value))
+        y_pred_clipped = np.clip(y_pred.value, 1e-15, 1 - 1e-15 )
+        self.value = np.sum(-y_true.value*np.log(y_pred_clipped)-(1-y_true.value)*np.log(1-y_pred_clipped))
 
     def backward(self):
         y_true, y_pred = self.inputs
-        self.gradients[y_pred] = (1 / y_true.value.shape[0]) * (y_pred.value - y_true.value)/(y_pred.value*(1-y_pred.value))
-        self.gradients[y_true] = (1 / y_true.value.shape[0]) * (np.log(y_pred.value) - np.log(1-y_pred.value))
+        self.gradients[y_pred] = (1 / y_true.value.shape[1]) * (y_pred.value - y_true.value)/(y_pred.value*(1-y_pred.value))
+        self.gradients[y_true] = (1 / y_true.value.shape[1]) * (np.log(y_pred.value) - np.log(1-y_pred.value))
