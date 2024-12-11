@@ -1,4 +1,4 @@
-from EDF import *
+from EDF_MLP import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
@@ -8,14 +8,14 @@ CLASS1_SIZE = 100
 CLASS2_SIZE = 100
 N_FEATURES = 2
 N_OUTPUT = 1
-LEARNING_RATE = 0.01
-EPOCHS = 1000
+LEARNING_RATE = 0.1
+EPOCHS = 100
 TEST_SIZE = 0.25
 
 # Define the means and covariances of the two components
 MEAN1 = np.array([-5, -5])
 COV1 = np.array([[1, 0], [0, 1]])
-MEAN2 = np.array([2, 2])
+MEAN2 = np.array([5, 5])
 COV2 = np.array([[1, 0], [0, 1]])
 MEAN3 = np.array([5, -5])
 COV3 = np.array([[1, 0], [0, 1]])
@@ -57,12 +57,12 @@ n_output = 1
 # Initialize weights and biases
 # W0 = np.array(np.zeros(1))
 # W1 = np.array([np.random.randn(1) * 0.1, np.random.randn(1) * 0.1]).reshape(-1, 2)
-h1 = np.random.randn(20,2) * 1
-h2 = np.random.randn(20,20) * 10
-h3 = np.random.randn(1,20) * 0.1
-b1 = np.zeros((20,1))
-b2 = np.zeros((20,1))
-b3 = np.zeros((1,1))
+# h1 = np.random.randn(20,2) * 1
+# h2 = np.random.randn(20,20) * 10
+# h3 = np.random.randn(1,20) * 0.1
+# b1 = np.zeros((20,1))
+# b2 = np.zeros((20,1))
+# b3 = np.zeros((1,1))
 
 
 # Create nodes
@@ -71,31 +71,41 @@ y_node = Input()
 
 # w0_node = Parameter(W0)
 # w1_node = Parameter(W1)
-h1_node = Parameter(h1)
-h2_node = Parameter(h2)
-h3_node = Parameter(h3)
-b1_node = Parameter(b1)
-b2_node = Parameter(b2)
-b3_node = Parameter(b3)
+# h1_node = Parameter(h1)
+# h2_node = Parameter(h2)
+# h3_node = Parameter(h3)
+# b1_node = Parameter(b1)
+# b2_node = Parameter(b2)
+# b3_node = Parameter(b3)
 
 # Build computation graph
 # b_node = Linear(w1_node, x1_node, w0_node)
 # sigmoid = Sigmoid(b_node)
 # loss = BCE(y_node, sigmoid)
-layer_1 = Linear(h1_node,x1_node,b1_node)
+layer_1 = Linear(x1_node,20,2,1)
 layer1 = Sigmoid(layer_1)
-layer_2 = Linear(h2_node,layer1,b2_node)
+layer_2 = Linear(layer1,20,20,10)
 layer2 = Sigmoid(layer_2)
-layer_3 = Linear(h3_node,layer2,b3_node)
+layer_3 = Linear(layer2,1,20,0.1)
 output = Sigmoid(layer_3)
 loss = BCE(y_node,output)
 
 
+# graph = [layer_1.W,layer_1.b,layer_2.W,layer_2.b,layer_3.W,layer_3.b,layer_1, layer1,layer_2, layer2,layer_3,output, loss]
+# trainable = [layer_1.W,layer_1.b,layer_2.W,layer_2.b,layer_3.W,layer_3.b]
 
-# Create graph outside the training loop
-graph = [x1_node, h1_node,b1_node, h2_node,b2_node,h3_node,b3_node,layer_1, layer1,layer_2, layer2,layer_3,output, loss]
-trainable = [h1_node, h2_node,h3_node,b1_node,b2_node,b3_node]
-
+# create a graph Automatically
+def topological_sort(node,visited=None,graph=None):
+    if not visited:
+        visited = set()
+        graph = []
+    if node in visited:
+        return
+    visited.add(node)
+    for input_node in node.inputs:
+        graph = topological_sort(input_node,visited,graph)
+    graph.append(node)
+    return graph
 
 # Forward and Backward Pass
 def forward_pass(graph):
@@ -112,6 +122,10 @@ def backward_pass(graph):
 def sgd_update(trainables, learning_rate=1e-2):
     for t in trainables:
         t.value -= np.dot(learning_rate, t.gradients[t])[0]
+
+# create the graph and list for the trainable nodes
+graph = topological_sort(loss)
+trainable = [i for i in graph if isinstance(i,Parameter)]
 
 # Dictionary to store loss values for different batch sizes
 loss_values = {batch_size: [] for batch_size in [1]}
