@@ -127,5 +127,6 @@ class BCE(Node):
 
     def backward(self):
         y_true, y_pred = self.inputs
-        self.gradients[y_pred] = (1 / y_true.value.shape[1]) * (y_pred.value - y_true.value)/(y_pred.value*(1-y_pred.value))
+        y_pred_clipped = np.clip(y_pred.value, 1e-15, 1 - 1e-15)
+        self.gradients[y_pred] = (1 / y_true.value.shape[1]) * (y_pred_clipped - y_true.value)/(y_pred.value*(1-y_pred_clipped))
         self.gradients[y_true] = (1 / y_true.value.shape[1]) * (np.log(y_pred.value) - np.log(1-y_pred.value))
