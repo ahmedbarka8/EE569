@@ -13,23 +13,17 @@ EPOCHS = 100
 TEST_SIZE = 0.25
 
 # Define the means and covariances of the two components
-MEAN1 = np.array([-5, -5])
+MEAN1 = np.array([1, 2])
 COV1 = np.array([[1, 0], [0, 1]])
-MEAN2 = np.array([5, 5])
+MEAN2 = np.array([1, -2])
 COV2 = np.array([[1, 0], [0, 1]])
-MEAN3 = np.array([5, -5])
-COV3 = np.array([[1, 0], [0, 1]])
-MEAN4 = np.array([-5, 5])
-COV4 = np.array([[1, 0], [0, 1]])
 
 # Generate random points from the two components
-X1 = multivariate_normal.rvs(MEAN1, COV1, CLASS1_SIZE//2)
-X2 = multivariate_normal.rvs(MEAN2, COV2, CLASS2_SIZE//2)
-X3 = multivariate_normal.rvs(MEAN3, COV3, CLASS1_SIZE//2)
-X4 = multivariate_normal.rvs(MEAN4, COV4, CLASS2_SIZE//2)
+X1 = multivariate_normal.rvs(MEAN1, COV1, CLASS1_SIZE)
+X2 = multivariate_normal.rvs(MEAN2, COV2, CLASS2_SIZE)
 
 # Combine the points and generate labels
-X = np.vstack((X1,X2,X3,X4))
+X = np.vstack((X1,X2))
 y = np.hstack((np.zeros(CLASS1_SIZE), np.ones(CLASS2_SIZE)))
 
 # Plot the generated data
