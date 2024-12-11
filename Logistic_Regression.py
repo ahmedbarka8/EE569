@@ -1,4 +1,4 @@
-from EDF import *
+from EDF_LR import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
