@@ -84,7 +84,7 @@ def backward_pass(graph):
 # SGD Update
 def sgd_update(trainables, learning_rate=1e-2):
     for t in trainables:
-        t.value -= np.dot(learning_rate, t.gradients[t].reshape(1, -1))[0]
+        t.value -= np.dot(learning_rate, t.gradients[t])
 
 # Dictionary to store loss values for different batch sizes
 loss_values = {batch_size: [] for batch_size in [1,2,4,8,16,32,64,128]}

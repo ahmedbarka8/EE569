@@ -34,8 +34,8 @@ class Linear(Node):
         # Compute gradients for A,x and b based on the chain rule
         A, x, b = self.inputs
         self.gradients[x] = np.matmul(A.value.T,self.outputs[0].gradients[self])
-        self.gradients[A] = np.matmul(self.outputs[0].gradients[self],x.value.T)
-        self.gradients[b] = np.sum(self.outputs[0].gradients[self], axis=1)
+        self.gradients[A] = np.matmul(self.outputs[0].gradients[self],x.value.T).reshape(A.value.shape)
+        self.gradients[b] = np.sum(self.outputs[0].gradients[self], axis=1).reshape(b.value.shape)
 
 
 # Input Node
@@ -129,4 +129,4 @@ class BCE(Node):
         y_true, y_pred = self.inputs
         y_pred_clipped = np.clip(y_pred.value, 1e-15, 1 - 1e-15)
         self.gradients[y_pred] = (1 / y_true.value.shape[1]) * (y_pred_clipped - y_true.value)/(y_pred.value*(1-y_pred_clipped))
-        self.gradients[y_true] = (1 / y_true.value.shape[1]) * (np.log(y_pred.value) - np.log(1-y_pred.value))
+        self.gradients[y_true] = (1 / y_true.value.shape[1]) * (np.log(y_pred_clipped) - np.log(1-y_pred.value))
