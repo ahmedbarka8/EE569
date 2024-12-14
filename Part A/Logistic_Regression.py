@@ -3,11 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 
-# Define constants hyperparamters
+# Define constants hyperparameters
 CLASS1_SIZE = 100
 CLASS2_SIZE = 100
-N_FEATURES = 2
-N_OUTPUT = 1
 LEARNING_RATE = 0.1
 EPOCHS = 100
 TEST_SIZE = 0.25
@@ -23,7 +21,7 @@ X1 = multivariate_normal.rvs(MEAN1, COV1, CLASS1_SIZE)
 X2 = multivariate_normal.rvs(MEAN2, COV2, CLASS2_SIZE)
 
 # Combine the points and generate labels
-X = np.vstack((X1,X2))
+X = np.vstack((X1, X2))
 y = np.hstack((np.zeros(CLASS1_SIZE), np.ones(CLASS2_SIZE)))
 
 # Plot the generated data
@@ -51,7 +49,6 @@ n_output = 1
 # Initialize weights and biases
 W0 = np.array(np.zeros(1))
 W1 = np.array([np.random.randn(1) * 0.1, np.random.randn(1) * 0.1]).reshape(-1, 2)
-
 
 # Create nodes
 x1_node = Input()
@@ -82,19 +79,20 @@ def backward_pass(graph):
 
 
 # SGD Update
-def sgd_update(trainables, learning_rate=1e-2):
-    for t in trainables:
+def sgd_update(trainable, learning_rate=1e-2):
+    for t in trainable:
         t.value -= np.dot(learning_rate, t.gradients[t])
 
+
 # Dictionary to store loss values for different batch sizes
-loss_values = {batch_size: [] for batch_size in [1,2,4,8,16,32,64,128]}
+loss_values = {batch_size: [] for batch_size in [1, 2, 4, 8, 16, 32, 64, 128]}
 
 # Training loop for different batch sizes
-for batchs in [1,2,4,8,16,32,64,128]:
+for batches in [1, 2, 4, 8, 16, 32, 64, 128]:
     for epoch in range(EPOCHS):
         loss_value = 0
-        for i in range(0, X_train.shape[0], batchs):
-            end = min(batchs + i, X_train.shape[0])
+        for i in range(0, X_train.shape[0], batches):
+            end = min(batches + i, X_train.shape[0])
             x1_node.value = X_train[i:end].T
             y_node.value = y_train[i:end].reshape(1, -1)
 
@@ -103,7 +101,7 @@ for batchs in [1,2,4,8,16,32,64,128]:
             sgd_update(trainable, LEARNING_RATE)
 
             loss_value += loss.value
-        loss_values[batchs].append(loss_value / X_train.shape[0])
+        loss_values[batches].append(loss_value / X_train.shape[0])
         print(f"Epoch {epoch + 1}, Loss: {loss_value / X_train.shape[0]}")
 
     # Evaluate the model
@@ -138,7 +136,7 @@ for batchs in [1,2,4,8,16,32,64,128]:
     plt.show()
 
     # Reset weights for next batch size
-    w0_node.value = np.zeros((1))
+    w0_node.value = np.zeros(1)
     w1_node.value = np.array([np.random.randn(1) * 0.1, np.random.randn(1) * 0.1]).reshape(-1, 2)
 
 # Plot loss curves for different batch sizes
