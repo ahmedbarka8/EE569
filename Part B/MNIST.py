@@ -1,10 +1,7 @@
-from EDF_MLP import *
+from EDF import *
 from sklearn import datasets
 from sklearn.preprocessing import OneHotEncoder
 import numpy as np
-
-# import matplotlib.pyplot as plt
-# from scipy.stats import multivariate_normal
 
 # Define constants hyperparameters
 LEARNING_RATE = 0.01
@@ -21,6 +18,7 @@ y = encoder.fit_transform(y_1.reshape(-1, 1))
 
 # Split data
 indices = np.arange(X.shape[0])
+np.random.shuffle(indices)
 
 test_set_size = int(len(X) * TEST_SIZE)
 test_indices = indices[:test_set_size]
@@ -31,16 +29,17 @@ y_train, y_test = y[train_indices], y[test_indices]
 
 # Model parameters
 n_features = X_train.shape[1]
-n_output = 1
-batches = 1
+hidden_size = 64
+output_size = 10
+batches = 64
 
 # Create nodes
 x_node = Input()
 y_node = Input()
 
-layer_1 = Linear(x_node, 64, 64)
+layer_1 = Linear(x_node, hidden_size, n_features)
 layer1 = Sigmoid(layer_1)
-layer_2 = Linear(layer1, 10, 64)
+layer_2 = Linear(layer1, output_size, hidden_size)
 output = SoftMax(layer_2)
 loss = BCE_Soft(y_node, output)
 
@@ -73,7 +72,7 @@ def backward_pass(graph):
 # SGD Update
 def sgd_update(trainable, learning_rate=1e-2):
     for t in trainable:
-        t.value -= np.dot(learning_rate, t.gradients[t])
+        t.value -= learning_rate * t.gradients[t]
 
 
 # create the graph and list for the trainable nodes
@@ -86,7 +85,7 @@ for epoch in range(EPOCHS):
     for i in range(0, X_train.shape[0], batches):
         end = min(batches + i, X_train.shape[0])
         x_node.value = X_train[i:end].T
-        y_node.value = y_train[i:end].reshape(10, -1)
+        y_node.value = y_train[i:end].T
 
         forward_pass(graph)
         backward_pass(graph)
