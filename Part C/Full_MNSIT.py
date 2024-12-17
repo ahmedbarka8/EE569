@@ -107,7 +107,7 @@ for epoch in range(EPOCHS):
 # Evaluate the model
 correct_predictions = 0
 for i in range(test_X.shape[0]):
-    x_node.value = test_X[i].T
+    x_node.value = test_X[i:i+1].T
     forward_pass(graph)
 
     indx_pre = np.argmax(output.value)
