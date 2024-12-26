@@ -120,7 +120,7 @@ class SoftMax(Node):
         self.gradients[self.inputs[0]] = (self.value - self.outputs[0].gradients[self])
 
 
-class BCE_Soft(Node):
+class CE(Node):
     def __init__(self, y_true, y_pred):
         Node.__init__(self, [y_true, y_pred])
 
@@ -134,3 +134,15 @@ class BCE_Soft(Node):
         y_pred_clipped = np.clip(y_pred.value, 1e-15, 1 - 1e-15)
         self.gradients[y_pred] = y_true.value
         self.gradients[y_true] = 0
+
+class ReLU(Node):
+    def __init__(self, x):
+        Node.__init__(self, [x])
+
+    def forward(self):
+        x = self.inputs[0].value
+        self.value = np.maximum(0, x)
+
+    def backward(self):
+        x = self.inputs[0].value
+        self.gradients[self.inputs[0]] = (x > 0) * self.outputs[0].gradients[self]

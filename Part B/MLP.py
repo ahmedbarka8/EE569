@@ -2,6 +2,7 @@ from EDF import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
+import time
 
 # Define constants hyperparameters
 CLASS1_SIZE = 100
@@ -9,6 +10,7 @@ CLASS2_SIZE = 100
 LEARNING_RATE = 0.1
 EPOCHS = 100
 TEST_SIZE = 0.25
+Batch_Size = 1
 
 # Define the means and covariances of the two components
 MEAN1 = np.array([-5, -5])
@@ -19,16 +21,18 @@ MEAN3 = np.array([5, -5])
 COV3 = np.array([[1, 0], [0, 1]])
 MEAN4 = np.array([-5, 5])
 COV4 = np.array([[1, 0], [0, 1]])
+MEAN5 = np.array([0, 0])
+COV5 = np.array([[1, 0], [0, 1]])
 
 # Generate random points from the two components
 X1 = multivariate_normal.rvs(MEAN1, COV1, CLASS1_SIZE // 2)
 X2 = multivariate_normal.rvs(MEAN2, COV2, CLASS2_SIZE // 2)
 X3 = multivariate_normal.rvs(MEAN3, COV3, CLASS1_SIZE // 2)
-X4 = multivariate_normal.rvs(MEAN4, COV4, CLASS2_SIZE // 2)
-
+X4 = multivariate_normal.rvs(MEAN4, COV4, CLASS2_SIZE // 4)
+X5 = multivariate_normal.rvs(MEAN5, COV5, CLASS2_SIZE // 4)
 # Combine the points and generate labels
-X = np.vstack((X1, X2, X3, X4))
-y = np.hstack((np.zeros(CLASS1_SIZE), np.ones(CLASS2_SIZE)))
+X = np.vstack((X1, X2, X3, X4,X5))
+y = np.hstack([np.zeros(CLASS1_SIZE + int(((3 / 4) * CLASS1_SIZE))), np.ones(CLASS2_SIZE // 4)])
 
 # Plot the generated data
 plt.scatter(X[:, 0], X[:, 1], c=y)
@@ -51,7 +55,7 @@ y_train, y_test = y[train_indices], y[test_indices]
 # Model parameters
 n_features = X_train.shape[1]
 n_output = 1
-batches = 1
+
 
 # Create nodes
 x1_node = Input()
@@ -100,15 +104,14 @@ def sgd_update(trainable, learning_rate=1e-2):
 # create the graph and list for the trainable nodes
 graph = topological_sort(loss)
 trainable = [i for i in graph if isinstance(i, Parameter)]
+loss_values = []
 
-# Dictionary to store loss values for different batch sizes
-
-
-# Training loop for different batch sizes
+tick = time.time()
+# Training
 for epoch in range(EPOCHS):
     loss_value = 0
-    for i in range(0, X_train.shape[0], batches):
-        end = min(batches + i, X_train.shape[0])
+    for i in range(0, X_train.shape[0], Batch_Size):
+        end = min(Batch_Size + i, X_train.shape[0])
         x1_node.value = X_train[i:end].T
         y_node.value = y_train[i:end].reshape(1, -1)
 
@@ -117,7 +120,11 @@ for epoch in range(EPOCHS):
         sgd_update(trainable, LEARNING_RATE)
 
         loss_value += loss.value
+    loss_values.append(loss_value / X_train.shape[0])
     print(f"Epoch {epoch + 1}, Loss: {loss_value / X_train.shape[0]}")
+
+LEARNING_TIME = time.time() - tick
+tick = time.time()
 
 # Evaluate the model
 correct_predictions = 0
@@ -130,7 +137,12 @@ for i in range(X.shape[0]):
         correct_predictions += 1
 
 accuracy = correct_predictions / X.shape[0]
-print(f"Accuracy: {accuracy * 100:.2f}%")
+Testing_Time = time.time() - tick
+
+print()
+print(f"Epochs: {EPOCHS} , Learning_Rate: {LEARNING_RATE} , Batch_Size : {Batch_Size}")
+print(f"Learning_Time : {LEARNING_TIME:.2f} Second, Testing_Time : {Testing_Time:.2f} Second")
+print(f"Average_Loss : {loss_value / (X_train.shape[0])} , Accuracy: {accuracy * 100:.2f}%")
 
 # Plot decision boundary
 x_min, x_max = X[:, 0].min(), X[:, 0].max()
@@ -148,4 +160,12 @@ plt.scatter(X[:, 0], X[:, 1], c=y)
 plt.xlabel('Feature 1')
 plt.ylabel('Feature 2')
 plt.title('Decision Boundary')
+plt.show()
+
+
+plt.plot(range(EPOCHS), loss_values)
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss Curve')
+plt.grid()
 plt.show()

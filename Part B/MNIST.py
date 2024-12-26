@@ -1,12 +1,16 @@
+from matplotlib import pyplot as plt
+
 from EDF import *
 from sklearn import datasets
 from sklearn.preprocessing import OneHotEncoder
 import numpy as np
+import time
 
 # Define constants hyperparameters
 LEARNING_RATE = 0.01
 EPOCHS = 100
 TEST_SIZE = 0.4
+Batch_Size = 64
 
 # Load the data base
 mnist = datasets.load_digits()
@@ -31,7 +35,6 @@ y_train, y_test = y[train_indices], y[test_indices]
 n_features = X_train.shape[1]
 hidden_size = 64
 output_size = 10
-batches = 64
 
 # Create nodes
 x_node = Input()
@@ -41,7 +44,7 @@ layer_1 = Linear(x_node, hidden_size, n_features)
 layer1 = Sigmoid(layer_1)
 layer_2 = Linear(layer1, output_size, hidden_size)
 output = SoftMax(layer_2)
-loss = BCE_Soft(y_node, output)
+loss = CE(y_node, output)
 
 
 # create a graph Automatically
@@ -79,11 +82,14 @@ def sgd_update(trainable, learning_rate=1e-2):
 graph = topological_sort(loss)
 trainable = [i for i in graph if isinstance(i, Parameter)]
 
-# Training loop for different batch sizes
+tick = time.time()
+loss_values = []
+
+# Training
 for epoch in range(EPOCHS):
     loss_value = 0
-    for i in range(0, X_train.shape[0], batches):
-        end = min(batches + i, X_train.shape[0])
+    for i in range(0, X_train.shape[0], Batch_Size):
+        end = min(Batch_Size + i, X_train.shape[0])
         x_node.value = X_train[i:end].T
         y_node.value = y_train[i:end].T
 
@@ -92,7 +98,11 @@ for epoch in range(EPOCHS):
         sgd_update(trainable, LEARNING_RATE)
 
         loss_value += loss.value
+    loss_values.append(loss_value / X_train.shape[0])
     print(f"Epoch {epoch + 1}, Loss: {loss_value / X_train.shape[0]}")
+
+LEARNING_TIME = time.time() - tick
+tick = time.time()
 
 # Evaluate the model
 correct_predictions = 0
@@ -106,4 +116,16 @@ for i in range(X.shape[0]):
         correct_predictions += 1
 
 accuracy = correct_predictions / X.shape[0]
-print(f"Accuracy: {accuracy * 100:.2f}%")
+Testing_Time = time.time() - tick
+
+print()
+print(f"Epochs: {EPOCHS} , Learning_Rate: {LEARNING_RATE} , Batch_Size : {Batch_Size}")
+print(f"Learning_Time : {LEARNING_TIME:.2f} Second, Testing_Time : {Testing_Time:.2f} Second")
+print(f"Average_Loss : {loss_value / (X_train.shape[0])} , Accuracy: {accuracy * 100:.2f}%")
+
+plt.plot(range(EPOCHS), loss_values)
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss Curve')
+plt.grid()
+plt.show()
