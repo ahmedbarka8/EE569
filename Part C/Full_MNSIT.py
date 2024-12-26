@@ -2,9 +2,10 @@ from EDF import *
 import numpy as np
 from keras.src.datasets import mnist
 from sklearn.preprocessing import OneHotEncoder
-from matplotlib import pyplot
+from matplotlib import pyplot, pyplot as plt
+import time
 
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.5
 EPOCHS = 20
 
 #loading the dataset
@@ -51,7 +52,7 @@ act2 = Sigmoid(hidden2)
 output_layer = Linear(act2, output_size, hidden_size2)
 output = SoftMax(output_layer)
 
-loss = BCE_Soft(y_node, output)
+loss = CE(y_node, output)
 
 
 # create a graph Automatically
@@ -89,6 +90,9 @@ def sgd_update(trainable, learning_rate=1e-2):
 graph = topological_sort(loss)
 trainable = [i for i in graph if isinstance(i, Parameter)]
 
+tick = time.time()
+loss_values = []
+
 # Training loop for different batch sizes
 for epoch in range(EPOCHS):
     loss_value = 0
@@ -102,7 +106,11 @@ for epoch in range(EPOCHS):
         sgd_update(trainable, LEARNING_RATE)
 
         loss_value += loss.value
+    loss_values.append(loss_value / test_X.shape[0])
     print(f"Epoch {epoch + 1}, Loss: {loss_value / test_X.shape[0]}")
+
+LEARNING_TIME = time.time() - tick
+tick = time.time()
 
 # Evaluate the model
 correct_predictions = 0
@@ -116,4 +124,16 @@ for i in range(test_X.shape[0]):
         correct_predictions += 1
 
 accuracy = correct_predictions / test_X.shape[0]
-print(f"Accuracy: {accuracy * 100:.2f}%")
+Testing_Time = time.time() - tick
+
+print()
+print(f"Epochs: {EPOCHS} , Learning_Rate: {LEARNING_RATE} , Batch_Size : {batches}")
+print(f"Learning_Time : {LEARNING_TIME/60:.2f} Minute, Testing_Time : {Testing_Time:.2f} Second")
+print(f"Average_Loss : {loss_value / (train_X.shape[0])} , Accuracy: {accuracy * 100:.2f}%")
+
+plt.plot(range(EPOCHS), loss_values)
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss Curve')
+plt.grid()
+plt.show()
