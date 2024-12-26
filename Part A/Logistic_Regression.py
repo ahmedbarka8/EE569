@@ -2,6 +2,7 @@ from EDF import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
+import time
 
 # Define constants hyperparameters
 CLASS1_SIZE = 100
@@ -85,14 +86,17 @@ def sgd_update(trainable, learning_rate=1e-2):
 
 
 # Dictionary to store loss values for different batch sizes
-loss_values = {batch_size: [] for batch_size in [1, 2, 4, 8, 16, 32, 64, 128]}
+loss_values = {Batch_size: [] for Batch_size in [1, 2, 4, 8, 16, 32, 64, 128,150]}
+Avg_loss = {Batch_size: [] for Batch_size in [1, 2, 4, 8, 16, 32, 64, 128,150]}
+
 
 # Training loop for different batch sizes
-for batches in [1, 2, 4, 8, 16, 32, 64, 128]:
+for Batch_Size in [1, 2, 4, 8, 16, 32, 64, 128,150]:
+    tick = time.time()
     for epoch in range(EPOCHS):
         loss_value = 0
-        for i in range(0, X_train.shape[0], batches):
-            end = min(batches + i, X_train.shape[0])
+        for i in range(0, X_train.shape[0], Batch_Size):
+            end = min(Batch_Size + i, X_train.shape[0])
             x1_node.value = X_train[i:end].T
             y_node.value = y_train[i:end].reshape(1, -1)
 
@@ -101,8 +105,10 @@ for batches in [1, 2, 4, 8, 16, 32, 64, 128]:
             sgd_update(trainable, LEARNING_RATE)
 
             loss_value += loss.value
-        loss_values[batches].append(loss_value / X_train.shape[0])
-        print(f"Epoch {epoch + 1}, Loss: {loss_value / X_train.shape[0]}")
+        loss_values[Batch_Size].append(loss_value / X_train.shape[0])
+
+    LEARNING_TIME = time.time() - tick
+    tick = time.time()
 
     # Evaluate the model
     correct_predictions = 0
@@ -115,7 +121,7 @@ for batches in [1, 2, 4, 8, 16, 32, 64, 128]:
             correct_predictions += 1
 
     accuracy = correct_predictions / X.shape[0]
-    print(f"Accuracy: {accuracy * 100:.2f}%")
+    Testing_Time = time.time() - tick
 
     # Plot decision boundary
     x_min, x_max = X[:, 0].min(), X[:, 0].max()
@@ -138,6 +144,12 @@ for batches in [1, 2, 4, 8, 16, 32, 64, 128]:
     # Reset weights for next batch size
     w0_node.value = np.zeros(1)
     w1_node.value = np.array([np.random.randn(1) * 0.1, np.random.randn(1) * 0.1]).reshape(-1, 2)
+
+    # Display the training parameters, timing, average loss, and accuracy for all Batch Size
+    print(f"Epochs: {EPOCHS} , Learning_Rate: {LEARNING_RATE} , Batch_Size : {Batch_Size}")
+    print(f"Learning_Time : {LEARNING_TIME} Second, Testing_Time : {Testing_Time} Second")
+    print(f"Average_Loss : {loss_value / (X_train.shape[0])} , Accuracy: {accuracy * 100:.2f}%")
+    print()
 
 # Plot loss curves for different batch sizes
 plt.figure(figsize=(10, 6))

@@ -93,11 +93,13 @@ class BCE(Node):
 
     def forward(self):
         y_true, y_pred = self.inputs
+        # Clip predicted values to avoid log(0)
         y_pred_clipped = np.clip(y_pred.value, 1e-15, 1 - 1e-15)
         self.value = np.sum(-y_true.value * np.log(y_pred_clipped) - (1 - y_true.value) * np.log(1 - y_pred_clipped))
 
     def backward(self):
         y_true, y_pred = self.inputs
+        # Clip predicted values to avoid division by zero
         y_pred_clipped = np.clip(y_pred.value, 1e-15, 1 - 1e-15)
         self.gradients[y_pred] = (1 / y_true.value.shape[1]) * (y_pred_clipped - y_true.value) / (
                 y_pred.value * (1 - y_pred_clipped))
