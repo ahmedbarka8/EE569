@@ -7,7 +7,7 @@ from keras.src.datasets import mnist
 from sklearn.preprocessing import OneHotEncoder
 
 LEARNING_RATE = 0.1
-EPOCHS = 5
+EPOCHS = 3
 
 # Load the dataset
 (train_X, train_y), (test_X, test_y) = mnist.load_data()
